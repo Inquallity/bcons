@@ -1,0 +1,44 @@
+{
+  "project_info": {
+    "project_number": "1006954578945",
+    "project_id": "inquallity-beacons"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1006954578945:android:51112161a6bfdb2e",
+        "android_client_info": {
+          "package_name": "com.example.inquallity.beacons"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1006954578945-sgb4j3sgq89safga2dvfop3adq18eku6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.inquallity.beacons",
+            "certificate_hash": "0D2DD4BE6656BD6859CEC45E0BDCE6FB549DBE1F"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApkhWYwHWUWDVyDjIonHngjlwLcC6qBy8"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
