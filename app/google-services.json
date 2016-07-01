@@ -13,17 +13,25 @@
       },
       "oauth_client": [
         {
-          "client_id": "1006954578945-sgb4j3sgq89safga2dvfop3adq18eku6.apps.googleusercontent.com",
+          "client_id": "1006954578945-j3gi0qml29iuik466qutg8gsanrjbsvc.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.inquallity.beacons",
             "certificate_hash": "0D2DD4BE6656BD6859CEC45E0BDCE6FB549DBE1F"
           }
+        },
+        {
+          "client_id": "1006954578945-45gotrm1v5ggstu3c4v010gfrmbet1u0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.inquallity.beacons",
+            "certificate_hash": "C4AA4F21E57AF5530E0A381B68B234052C2AA703"
+          }
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyApkhWYwHWUWDVyDjIonHngjlwLcC6qBy8"
+          "current_key": "AIzaSyAk3lPA6RuO5YANgAfI5XYd1bdzG-RQYmc"
         }
       ],
       "services": {
