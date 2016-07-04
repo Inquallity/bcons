@@ -5,16 +5,18 @@
     android:background="@android:color/darker_gray"
     android:orientation="vertical">
 
-    <com.google.android.gms.common.SignInButton
+    <Button
         android:id="@+id/btnSignIn"
         android:layout_width="match_parent"
+        android:text="Sign in"
+        android:onClick="onSignInClick"
         android:layout_height="wrap_content" />
 
     <Button
         android:id="@+id/btnSignOut"
-        android:onClick="onSignOutClick"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:onClick="onSignOutClick"
         android:text="Sign out" />
 
     <TextView

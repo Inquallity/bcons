@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
+        android:name=".AppDelegate"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -14,7 +15,7 @@
         android:theme="@style/AppTheme">
         <meta-data
             android:name="com.google.android.nearby.messages.API_KEY"
-            android:value="AIzaSyDtplvoeAkWCZkYGPil0bMBDzfTHmG-w0k" />
+            android:value="${nearbyApiToken}" />
 
         <activity
             android:name=".activity.SplashActivity"
@@ -27,6 +28,7 @@
         </activity>
 
         <activity android:name=".activity.MainActivity" />
-
+        <activity android:name=".activity.SettingsActivity" />
+        <activity android:name=".activity.ProbeActivity" />
     </application>
 </manifest>

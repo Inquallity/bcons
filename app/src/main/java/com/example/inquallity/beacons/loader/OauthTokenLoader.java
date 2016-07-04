@@ -1,4 +1,4 @@
-package com.example.inquallity.beacons;
+package com.example.inquallity.beacons.loader;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -20,10 +20,9 @@ import java.io.IOException;
  */
 public class OauthTokenLoader extends AsyncTaskLoader<String> {
 
-    private static final String SCOPE = "oauth2:https://www.googleapis.com/auth/userlocation.beacon.registry";
-//    private static final String SCOPE = "oauth2:https://www.googleapis.com/auth/userinfo.profile";
-
     private static final String TAG = OauthTokenLoader.class.getName();
+
+    private static final String PROXIMITY_AUTH_SCOPE = "oauth2:https://www.googleapis.com/auth/userlocation.beacon.registry";
 
     private final String mAccountName;
 
@@ -59,8 +58,7 @@ public class OauthTokenLoader extends AsyncTaskLoader<String> {
             for (Account account : accounts) {
                 if (mAccountName.equalsIgnoreCase(account.name)) {
                     try {
-                        mCachedToken = GoogleAuthUtil.getToken(getContext(), account, SCOPE);
-                        Log.d(TAG, "OHOHOHOHO! " + mCachedToken);
+                        mCachedToken = GoogleAuthUtil.getToken(getContext(), account, PROXIMITY_AUTH_SCOPE);
                     } catch (IOException e) {
                         Log.e(TAG, e.getMessage(), e);
                     } catch (UserRecoverableAuthException e) {
