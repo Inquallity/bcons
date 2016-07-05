@@ -5,20 +5,6 @@
     android:background="@android:color/darker_gray"
     android:orientation="vertical">
 
-    <Button
-        android:id="@+id/btnSignIn"
-        android:layout_width="match_parent"
-        android:text="Sign in"
-        android:onClick="onSignInClick"
-        android:layout_height="wrap_content" />
-
-    <Button
-        android:id="@+id/btnSignOut"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="onSignOutClick"
-        android:text="Sign out" />
-
     <TextView
         android:id="@+id/btnProceed"
         android:layout_width="match_parent"
@@ -27,6 +13,16 @@
         android:onClick="onProceedClick"
         android:padding="16dp"
         android:text="Proceed"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/btnList"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:onClick="onShowListClick"
+        android:padding="16dp"
+        android:text="Show List"
         android:textSize="16sp" />
 
     <TextView

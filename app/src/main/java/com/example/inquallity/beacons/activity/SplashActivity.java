@@ -27,7 +27,7 @@ public class SplashActivity extends AppCompatActivity implements SplashView {
     @Override
     protected void onResume() {
         super.onResume();
-        startActivity(MainActivity.makeIntent(this));
+        startActivity(LoginActivity.makeIntent(this));
         finish();
     }
 }

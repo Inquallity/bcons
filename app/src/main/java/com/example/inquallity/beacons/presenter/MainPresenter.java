@@ -16,7 +16,9 @@ import java.util.Locale;
 /**
  * @author Maksim Radko
  */
-public class MainPresenter extends MessageListener implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class MainPresenter extends MessageListener implements
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener {
 
     @NonNull
     private final MainView mView;
