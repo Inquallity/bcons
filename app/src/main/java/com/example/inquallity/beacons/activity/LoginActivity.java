@@ -28,8 +28,6 @@ public class LoginActivity extends AppCompatActivity implements LoginView, View.
 
     private static final String PROXIMITY_AUTH_SCOPE = "oauth2:https://www.googleapis.com/auth/userlocation.beacon.registry";
 
-    private static final String TAG = LoginActivity.class.getName();
-
     private static final int RC_SIGN_IN = 1;
 
     private static final int RC_PERMISSIONS = 2;
