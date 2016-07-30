@@ -5,6 +5,7 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -12,6 +13,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
@@ -19,22 +21,23 @@ import com.example.inquallity.beacons.R;
 import com.example.inquallity.beacons.presenter.LoginPresenter;
 import com.example.inquallity.beacons.view.LoginView;
 import com.google.android.gms.auth.GoogleAuthUtil;
-import com.google.android.gms.common.AccountPicker;
 
 /**
  * @author Maksim Radko
  */
-public class LoginActivity extends AppCompatActivity implements LoginView, View.OnClickListener {
+public class LoginActivity extends AppCompatActivity implements LoginView {
+
+    private static final String TAG = LoginActivity.class.getName();
 
     private static final String PROXIMITY_AUTH_SCOPE = "oauth2:https://www.googleapis.com/auth/userlocation.beacon.registry";
 
-    private static final int RC_SIGN_IN = 1;
+    private static final int RC_SIGN_IN = 0;
 
     private static final int RC_PERMISSIONS = 2;
 
-    private TextView mCurrentLogin;
+    private SharedPreferences mPreferences;
 
-    private View mContinue;
+    private TextView mCurrentLogin;
 
     private LoginPresenter mPresenter;
 
@@ -44,25 +47,31 @@ public class LoginActivity extends AppCompatActivity implements LoginView, View.
     }
 
     @Override
-    public void onClick(View v) {
-        if (v.getId() == R.id.btnContinue) {
-            mPresenter.findAccountAndUpdate(PreferenceManager.getDefaultSharedPreferences(this),
-                    (AccountManager) getSystemService(ACCOUNT_SERVICE));
+    public void showCurrentLogin(String currentLogin) {
+        mCurrentLogin.setText(currentLogin);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.GET_ACCOUNTS) == PackageManager.PERMISSION_GRANTED) {
+            mPresenter.findAccountAndUpdate(mPreferences, AccountManager.get(this));
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.GET_ACCOUNTS}, RC_PERMISSIONS);
         }
     }
 
     @Override
-    public void showCurrentLogin(String currentLogin) {
-        mCurrentLogin.setText(currentLogin);
-        findGoogleAccount();
-    }
-
-    @Override
+    @SuppressWarnings("deprecation")
     public void showLoginChooser() {
-        final Intent intent = AccountPicker.newChooseAccountIntent(null, null,
-                new String[]{GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE},
-                false, null, null, null, null);
-        startActivityForResult(intent, RC_SIGN_IN);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.GET_ACCOUNTS) == PackageManager.PERMISSION_DENIED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.GET_ACCOUNTS}, RC_PERMISSIONS);
+        } else {
+            final Intent intent;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                intent = AccountManager.newChooseAccountIntent(null, null,
+                        new String[]{GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE}, null, null, null, null);
+            } else {
+                intent = AccountManager.newChooseAccountIntent(null, null,
+                        new String[]{GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE}, false, null, null, null, null);
+            }
+            startActivityForResult(intent, RC_SIGN_IN);
+        }
     }
 
     @Override
@@ -84,8 +93,14 @@ public class LoginActivity extends AppCompatActivity implements LoginView, View.
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == RC_PERMISSIONS && grantResults.length > 0) {
-            findGoogleAccount();
+            mPresenter.findAccountAndUpdate(mPreferences, AccountManager.get(this));
+        } else {
+            Log.d(TAG, "onRequestPermissionsResult: ERROR");
         }
+    }
+
+    public void onContinueClick(View view) {
+        mPresenter.checkLogin(mPreferences);
     }
 
     @Override
@@ -94,7 +109,7 @@ public class LoginActivity extends AppCompatActivity implements LoginView, View.
         final Bundle extras = data.getExtras();
         if (requestCode == RC_SIGN_IN && extras != null) {
             final String accountName = extras.getString(AccountManager.KEY_ACCOUNT_NAME);
-            mPresenter.updateCurrentAccount(PreferenceManager.getDefaultSharedPreferences(this), accountName);
+            mPresenter.updateCurrentAccount(mPreferences, accountName);
         }
     }
 
@@ -105,17 +120,8 @@ public class LoginActivity extends AppCompatActivity implements LoginView, View.
         mPresenter = new LoginPresenter(this);
 
         mCurrentLogin = (TextView) findViewById(R.id.tvCurrentLogin);
-        mContinue = findViewById(R.id.btnContinue);
-        mContinue.setOnClickListener(this);
 
-        mPresenter.checkLogin(PreferenceManager.getDefaultSharedPreferences(this));
+        mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
     }
 
-    private void findGoogleAccount() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.GET_ACCOUNTS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.GET_ACCOUNTS}, RC_PERMISSIONS);
-        } else {
-            mPresenter.findAccountAndUpdate(PreferenceManager.getDefaultSharedPreferences(this), AccountManager.get(this));
-        }
-    }
 }

@@ -8,13 +8,13 @@
         android:id="@+id/tvBeaconName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="@dimen/padding_8" />
+        android:padding="@dimen/padding.8" />
 
     <TextView
         android:id="@+id/tvStatus"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="@dimen/padding_8" />
+        android:padding="@dimen/padding.8" />
 
     <View
         android:layout_width="match_parent"

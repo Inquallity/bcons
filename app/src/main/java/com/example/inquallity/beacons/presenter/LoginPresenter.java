@@ -1,11 +1,13 @@
 package com.example.inquallity.beacons.presenter;
 
+import android.Manifest;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresPermission;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -42,10 +44,10 @@ public class LoginPresenter {
 
     public void checkLogin(SharedPreferences sp) {
         final String currentLogin = sp.getString(KEY_LOGIN, "");
-        if (!TextUtils.isEmpty(currentLogin)) {
-            mView.showCurrentLogin(currentLogin);
-        } else {
+        if (TextUtils.isEmpty(currentLogin)) {
             mView.showLoginChooser();
+        } else {
+            mView.showCurrentLogin(currentLogin);
         }
     }
 
@@ -54,6 +56,7 @@ public class LoginPresenter {
         checkLogin(sp);
     }
 
+    @RequiresPermission(Manifest.permission.GET_ACCOUNTS)
     public void findAccountAndUpdate(SharedPreferences sp, AccountManager am) {
         final String accountName = sp.getString(KEY_LOGIN, "");
         if (!TextUtils.isEmpty(accountName)) {

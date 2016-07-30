@@ -1,5 +1,7 @@
 package com.example.inquallity.beacons.api;
 
+import com.example.inquallity.beacons.BuildConfig;
+
 import java.io.IOException;
 
 import okhttp3.Interceptor;
@@ -20,7 +22,7 @@ public class Provider {
 
     public static Retrofit provide() {
         return new Retrofit.Builder()
-                .baseUrl("https://proximitybeacon.googleapis.com/")
+                .baseUrl(BuildConfig.PROXIMITY_ENDPOINT)
                 .addConverterFactory(GsonConverterFactory.create())
                 .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
                 .client(provideClient())
@@ -33,8 +35,10 @@ public class Provider {
                 .addInterceptor(new Interceptor() {
                     @Override
                     public Response intercept(Chain chain) throws IOException {
-                        final Request request = chain.request();
-                        final Request newRequest = request.newBuilder().addHeader("Authorization", "Bearer " + sToken).build();
+                        final Request newRequest = chain.request()
+                                .newBuilder()
+                                .addHeader("Authorization", "Bearer " + sToken)
+                                .build();
                         return chain.proceed(newRequest);
                     }
                 })

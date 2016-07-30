@@ -7,5 +7,5 @@ import com.google.android.gms.nearby.messages.Message;
  */
 public interface MainView {
 
-    void buildNotification(Message message);
+    void addMessage(Message message);
 }

@@ -1,6 +1,13 @@
 <resources>
     <string name="app_name">Beacons</string>
-    <!--<string name="client_id">1006954578945-0oe6d3fhhvoltbale2ej47vg711f3q2o.apps.googleusercontent.com</string>-->
-    <!--<string name="client_id">1006954578945-45gotrm1v5ggstu3c4v010gfrmbet1u0.apps.googleusercontent.com</string>-->
     <string name="client_id">1006954578945-j3gi0qml29iuik466qutg8gsanrjbsvc.apps.googleusercontent.com</string>
+    <string name="subscribe">Subscribe</string>
+    <string name="show_list">Show List</string>
+    <string name="proceed">Continue</string>
+    <string name="stay_subscribed">Stay subscribed</string>
+    <string name="bluetooth_disabled">Bluetooth disabled</string>
+    <string name="enable">Enable</string>
+    <string name="subscribe_error">Something wrong</string>
+    <string name="subscribe_cancelled">Canceled</string>
+    <string name="subscribe_successful">Subscribed successful</string>
 </resources>

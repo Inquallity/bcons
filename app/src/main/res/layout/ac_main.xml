@@ -9,27 +9,46 @@
         android:id="@+id/btnProceed"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="1dp"
+        android:background="@drawable/bg_ripple_white"
         android:gravity="center"
         android:onClick="onProceedClick"
-        android:padding="16dp"
-        android:text="Proceed"
-        android:textSize="16sp" />
+        android:padding="@dimen/padding.16"
+        android:text="@string/subscribe"
+        android:textColor="@android:color/darker_gray"
+        android:textSize="@dimen/text.14" />
 
     <TextView
         android:id="@+id/btnList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="1dp"
+        android:background="@drawable/bg_ripple_white"
         android:gravity="center"
         android:onClick="onShowListClick"
-        android:padding="16dp"
-        android:text="Show List"
-        android:textSize="16sp" />
+        android:padding="@dimen/padding.16"
+        android:text="@string/show_list"
+        android:textColor="@android:color/darker_gray"
+        android:textSize="@dimen/text.14" />
 
-    <TextView
-        android:id="@+id/tvMessages"
+    <CheckBox
+        android:id="@+id/cbStaySubscribed"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/white"
-        android:textColor="@android:color/black"
-        android:textSize="11sp" />
+        android:checked="false"
+        android:padding="@dimen/padding.16"
+        android:text="@string/stay_subscribed"
+        android:textColor="@android:color/darker_gray"
+        android:textSize="@dimen/text.14" />
+
+    <View
+        android:id="@+id/lineIndicator"
+        android:layout_width="match_parent"
+        android:layout_height="2dp" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/rvMessages"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 </LinearLayout>

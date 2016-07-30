@@ -48,5 +48,6 @@ public class MainPresenter extends MessageListener implements
     @Override
     public void onFound(Message message) {
         mView.buildNotification(message);
+        mView.addMessage(message);
     }
 }

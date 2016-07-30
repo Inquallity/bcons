@@ -8,15 +8,11 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.view.GestureDetector;
-import android.view.MotionEvent;
-import android.view.View;
 
 import com.example.inquallity.beacons.R;
 import com.example.inquallity.beacons.adapter.BeaconInfoAdapter;
 import com.example.inquallity.beacons.model.BeaconInfo;
 import com.example.inquallity.beacons.presenter.SettingsPresenter;
-import com.example.inquallity.beacons.utils.ItemTouchListenerImpl;
 import com.example.inquallity.beacons.view.SettingsView;
 
 import java.util.List;
@@ -50,21 +46,6 @@ public class SettingsActivity extends AppCompatActivity implements SettingsView 
         mRecyclerView = (RecyclerView) findViewById(R.id.rvBeacons);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mRecyclerView.setAdapter(mBeaconsAdapter);
-        mRecyclerView.addOnItemTouchListener(new ItemTouchListenerImpl(this, new BeaconTouchListener()));
         mPresenter.getBeaconsList();
-    }
-
-    private class BeaconTouchListener extends GestureDetector.SimpleOnGestureListener {
-
-        @Override
-        public boolean onSingleTapConfirmed(MotionEvent e) {
-            final View view = mRecyclerView.findChildViewUnder(e.getX(), e.getY());
-            if (view != null) {
-                final int position = mRecyclerView.getChildAdapterPosition(view);
-                final BeaconInfo infoItem = mBeaconsAdapter.getItem(position);
-                startActivity(InfoActivity.makeIntent(SettingsActivity.this, infoItem.getBeaconName()));
-            }
-            return super.onSingleTapConfirmed(e);
-        }
     }
 }
