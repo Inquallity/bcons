@@ -1,196 +1,119 @@
 package com.example.inquallity.beacons.activity;
 
-import android.Manifest;
-import android.accounts.AccountManager;
-import android.app.LoaderManager;
+import android.app.PendingIntent;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.Loader;
-import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
+import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 
-import com.example.inquallity.beacons.OauthTokenLoader;
-import com.example.inquallity.beacons.Observations;
 import com.example.inquallity.beacons.R;
-import com.example.inquallity.beacons.api.Bcons;
-import com.example.inquallity.beacons.api.Provider;
+import com.example.inquallity.beacons.adapter.MessagesAdapter;
 import com.example.inquallity.beacons.presenter.MainPresenter;
+import com.example.inquallity.beacons.service.BeaconsMessageService;
 import com.example.inquallity.beacons.view.MainView;
-import com.google.android.gms.auth.GoogleAuthUtil;
-import com.google.android.gms.auth.api.Auth;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.common.AccountPicker;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.messages.Message;
-import com.google.android.gms.nearby.messages.MessageListener;
 import com.google.android.gms.nearby.messages.MessagesOptions;
 import com.google.android.gms.nearby.messages.NearbyPermissions;
 import com.google.android.gms.nearby.messages.Strategy;
-import com.google.android.gms.nearby.messages.SubscribeCallback;
 import com.google.android.gms.nearby.messages.SubscribeOptions;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
+public class MainActivity extends AppCompatActivity implements MainView, ResultCallback<Status> {
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+    private static final MessagesOptions MESSAGES_OPTIONS =
+            new MessagesOptions.Builder().setPermissions(NearbyPermissions.BLE).build();
 
-public class MainActivity extends AppCompatActivity implements MainView,
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
-        ResultCallback<Status>, View.OnClickListener, LoaderManager.LoaderCallbacks<String>, Callback<Observations> {
+    private static final SubscribeOptions SUBSCRIBE_OPTIONS =
+            new SubscribeOptions.Builder().setStrategy(Strategy.BLE_ONLY).build();
 
     private static final String TAG = MainActivity.class.getName();
 
-    private static final int RC_SIGN_IN = 1;
-
-    private static final int RC_PERMISSIONS = 2;
+    private static final int RC_ENABLE_BT = 1;
 
     private MainPresenter mPresenter;
 
     private GoogleApiClient mApiClient;
 
-    private SimpleDateFormat mDateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault());
+    private View mLineIndicator;
 
-    @NonNull
-    private SubscribeOptions mSubscribeOptions = SubscribeOptions.DEFAULT;
+    private RecyclerView mRecyclerView;
 
-    private TextView mMessages;
+    private MessagesAdapter mAdapter = new MessagesAdapter();
 
-    private MessageListener mMessageListener = new MessageListener() {
-        @Override
-        public void onFound(Message message) {
-            Log.d(TAG, "onFound: msg: " + message);
-            Log.d(TAG, "onFound: msg content: " + new String(message.getContent()));
-            Log.d(TAG, "onFound: namespace/type: " + message.getNamespace() + "/ " + message.getType());
-            final long currentTime = System.currentTimeMillis();
-            final Date date = new Date(currentTime);
-            mMessages.append(message.toString() + "\n" + message.getNamespace() + " "
-                    + message.getType() + ":" + new String(message.getContent()) + "\n"
-                    + "----------------------------" + mDateFormat.format(date));
-        }
+    private BluetoothAdapter mBluetoothAdapter;
 
-        @Override
-        public void onLost(Message message) {
-            super.onLost(message);
-            Log.d(TAG, "onLost: " + new String(message.getContent()));
-        }
-    };
+    private CheckBox mStaySubscribed;
 
-    private String mAccountName;
+    private boolean mIsSubscribed;
 
     @NonNull
     public static Intent makeIntent(@NonNull Context context) {
-        return new Intent(context, MainActivity.class);
+        return new Intent(context, MainActivity.class)
+                .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+    }
+
+    public void onProceedClick(View view) {
+        if (!mBluetoothAdapter.isEnabled()) {
+            Snackbar.make(mLineIndicator, R.string.bluetooth_disabled, Snackbar.LENGTH_LONG)
+                    .setAction(R.string.enable, new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            final Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                            startActivityForResult(enableBtIntent, RC_ENABLE_BT);
+                        }
+                    })
+                    .show();
+        } else {
+            subscribe();
+        }
+    }
+
+    public void onShowListClick(View view) {
+        startActivity(SettingsActivity.makeIntent(this));
     }
 
     @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        Log.d(TAG, "onConnected: ");
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-        Log.d(TAG, "onConnectionSuspended: ");
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.d(TAG, "onConnectionFailed:");
+    public void addMessage(Message message) {
+        mAdapter.add(message);
     }
 
     @Override
     public void onResult(@NonNull Status status) {
-        Log.d(TAG, "onResult: subscribe. " + status.getStatusMessage());
-    }
-
-    public void onProceedClick(View view) {
-        Nearby.Messages.subscribe(mApiClient, mMessageListener, mSubscribeOptions)
-                .setResultCallback(this);
-        Log.d(TAG, "onProceedClick: ");
-    }
-
-    @Override
-    public void onClick(View view) {
-//        final Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mApiClient);
-//        startActivityForResult(signInIntent, RC_SIGN_IN);
-        final Intent intent = AccountPicker.newChooseAccountIntent(null, null, new String[]{GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE}, false, null, null, null, null);
-        startActivityForResult(intent, RC_SIGN_IN);
-
-    }
-
-    public void onSignOutClick(View view) {
-        Auth.GoogleSignInApi.signOut(mApiClient).setResultCallback(new ResultCallback<Status>() {
-            @Override
-            public void onResult(@NonNull Status status) {
-                Log.d(TAG, "onResult: " + status.getStatusMessage());
-            }
-        });
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == RC_PERMISSIONS && grantResults.length > 0) {
-            findGoogleAccount();
+        int textRes = 0;
+        if (status.isSuccess()) {
+            mIsSubscribed = true;
+            textRes = R.string.subscribe_successful;
+        } else if (status.isCanceled()) {
+            mIsSubscribed = false;
+            textRes = R.string.subscribe_cancelled;
+        } else {
+            mIsSubscribed = false;
+            textRes = R.string.subscribe_error;
         }
-    }
-
-    @Override
-    public Loader<String> onCreateLoader(int i, Bundle bundle) {
-        return new OauthTokenLoader(this, mAccountName);
-    }
-
-    @Override
-    public void onLoadFinished(Loader<String> loader, String s) {
-        Toast.makeText(this, "Oauth2 token is: " + s, Toast.LENGTH_LONG).show();
-        Provider.provide(s).create(Bcons.class)
-                .fetchObservations()
-                .enqueue(this);
-    }
-
-    @Override
-    public void onLoaderReset(Loader<String> loader) {
-
-    }
-
-    @Override
-    public void onResponse(Call<Observations> call, Response<Observations> response) {
-        Log.d(TAG, "onResponse: ");
-        final Observations body = response.body();
-        if (body != null) {
-            Toast.makeText(this, "Success!", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    @Override
-    public void onFailure(Call<Observations> call, Throwable t) {
-        Log.e(TAG, t.getMessage(), t);
+        Snackbar.make(mLineIndicator, textRes, Snackbar.LENGTH_INDEFINITE).show();
+        refreshBluetoothState();
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == RC_SIGN_IN) {
-            final Bundle extras = data.getExtras();
-            if (extras != null) {
-                mAccountName = extras.getString(AccountManager.KEY_ACCOUNT_NAME);
-                findGoogleAccount();
-            }
+        if (requestCode == RC_ENABLE_BT) {
+            refreshBluetoothState();
+            subscribe();
         }
     }
 
@@ -198,57 +121,73 @@ public class MainActivity extends AppCompatActivity implements MainView,
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ac_main);
+        initViews();
         mPresenter = new MainPresenter(this);
-//        mApiClient = new GoogleApiClient.Builder(this)
-//                .addApi(Nearby.MESSAGES_API)
-//                .addConnectionCallbacks(this)
-//                .enableAutoManage(this, this)
-//                .build();
-        mMessages = (TextView) findViewById(R.id.tvMessages);
-        final SignInButton signInButton = (SignInButton) findViewById(R.id.btnSignIn);
-        signInButton.setSize(SignInButton.SIZE_STANDARD);
-
-        //BLE Only
-        final GoogleSignInOptions gso = new GoogleSignInOptions
-                .Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.client_id))
-                .requestServerAuthCode(getString(R.string.client_id))
-                .requestEmail()
-                .build();
-        signInButton.setScopes(gso.getScopeArray());
-        signInButton.setOnClickListener(this);
         mApiClient = new GoogleApiClient.Builder(this)
-                .addApi(Nearby.MESSAGES_API,
-                        new MessagesOptions.Builder()
-                                .setPermissions(NearbyPermissions.BLE)
-                                .build())
-                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-                .addConnectionCallbacks(this)
-                .enableAutoManage(this, this)
+                .addApi(Nearby.MESSAGES_API, MESSAGES_OPTIONS)
+                .addConnectionCallbacks(mPresenter)
+                .enableAutoManage(this, mPresenter)
                 .build();
-        mSubscribeOptions = new SubscribeOptions.Builder()
-                .setStrategy(Strategy.BLE_ONLY)
-                .setCallback(new SubscribeCallback() {
-                    @Override
-                    public void onExpired() {
-                        super.onExpired();
-                        Log.d(TAG, "onExpired: ");
-                    }
-                })
-                .build();
+        initAdapter();
     }
 
     @Override
     protected void onStop() {
-        Nearby.Messages.unsubscribe(mApiClient, mMessageListener);
+        unSubscribe();
         super.onStop();
     }
 
-    private void findGoogleAccount() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.GET_ACCOUNTS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.GET_ACCOUNTS}, RC_PERMISSIONS);
+    private void initViews() {
+        mLineIndicator = findViewById(R.id.lineIndicator);
+        mStaySubscribed = (CheckBox) findViewById(R.id.cbStaySubscribed);
+        mStaySubscribed.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    if (mIsSubscribed) {
+                        Nearby.Messages.unsubscribe(mApiClient, mPresenter);
+                    }
+                    final PendingIntent pendingIntent = PendingIntent.getService(
+                            MainActivity.this, 0,
+                            new Intent(MainActivity.this, BeaconsMessageService.class),
+                            PendingIntent.FLAG_UPDATE_CURRENT);
+                    Nearby.Messages.subscribe(mApiClient, pendingIntent, SUBSCRIBE_OPTIONS).setResultCallback(MainActivity.this);
+                } else {
+                    Nearby.Messages.unsubscribe(mApiClient, mPresenter);
+                }
+            }
+        });
+        mRecyclerView = (RecyclerView) findViewById(R.id.rvMessages);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mRecyclerView.setAdapter(mAdapter);
+    }
+
+    private void initAdapter() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+            mBluetoothAdapter = bluetoothManager.getAdapter();
         } else {
-            getLoaderManager().initLoader(R.id.oauth_token_loader, Bundle.EMPTY, this);
+            mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        }
+        refreshBluetoothState();
+    }
+
+    private void refreshBluetoothState() {
+        final int color = ContextCompat.getColor(this, mBluetoothAdapter.isEnabled()
+                ? android.R.color.holo_green_dark
+                : android.R.color.holo_red_dark);
+        mLineIndicator.setBackgroundColor(color);
+    }
+
+    private void subscribe() {
+        if (mApiClient.isConnected()) {
+            Nearby.Messages.subscribe(mApiClient, mPresenter, SUBSCRIBE_OPTIONS).setResultCallback(this);
+        }
+    }
+
+    private void unSubscribe() {
+        if (mApiClient.isConnected()) {
+            Nearby.Messages.unsubscribe(mApiClient, mPresenter);
         }
     }
 

@@ -1,6 +1,6 @@
 package com.example.inquallity.beacons.api;
 
-import android.support.annotation.NonNull;
+import com.example.inquallity.beacons.BuildConfig;
 
 import java.io.IOException;
 
@@ -10,6 +10,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
@@ -17,25 +18,34 @@ import retrofit2.converter.gson.GsonConverterFactory;
  */
 public class Provider {
 
-    public static Retrofit provide(@NonNull String token) {
+    private static String sToken;
+
+    public static Retrofit provide() {
         return new Retrofit.Builder()
-                .baseUrl("https://proximitybeacon.googleapis.com/")
+                .baseUrl(BuildConfig.PROXIMITY_ENDPOINT)
                 .addConverterFactory(GsonConverterFactory.create())
-                .client(provideClient(token))
+                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+                .client(provideClient())
                 .build();
     }
 
-    private static OkHttpClient provideClient(final String token) {
+    private static OkHttpClient provideClient() {
         return new OkHttpClient.Builder()
                 .addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
                 .addInterceptor(new Interceptor() {
                     @Override
                     public Response intercept(Chain chain) throws IOException {
-                        final Request request = chain.request();
-                        final Request newRequest = request.newBuilder().addHeader("Authorization", "Bearer " + token).build();
+                        final Request newRequest = chain.request()
+                                .newBuilder()
+                                .addHeader("Authorization", "Bearer " + sToken)
+                                .build();
                         return chain.proceed(newRequest);
                     }
                 })
                 .build();
+    }
+
+    public static void refreshKey(String data) {
+        sToken = data;
     }
 }

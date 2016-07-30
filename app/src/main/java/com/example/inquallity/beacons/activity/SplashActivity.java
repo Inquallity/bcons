@@ -13,8 +13,6 @@ import com.example.inquallity.beacons.view.SplashView;
  */
 public class SplashActivity extends AppCompatActivity implements SplashView {
 
-    private static final String TAG = SplashActivity.class.getName();
-
     private SplashPresenter mPresenter;
 
     @Override
@@ -27,7 +25,7 @@ public class SplashActivity extends AppCompatActivity implements SplashView {
     @Override
     protected void onResume() {
         super.onResume();
-        startActivity(MainActivity.makeIntent(this));
+        startActivity(LoginActivity.makeIntent(this));
         finish();
     }
 }
