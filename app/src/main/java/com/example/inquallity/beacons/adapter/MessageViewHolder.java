@@ -6,8 +6,6 @@ import android.widget.TextView;
 
 import com.example.inquallity.beacons.R;
 import com.google.android.gms.nearby.messages.Message;
-import com.google.android.gms.nearby.messages.devices.NearbyDevice;
-import com.google.android.gms.nearby.messages.internal.BleSignalImpl;
 
 /**
  * @author Maksim Radko
@@ -34,12 +32,5 @@ public class MessageViewHolder extends RecyclerView.ViewHolder {
         mNamespace.setText(message.getNamespace());
         mType.setText(message.getType());
         mContent.setText(new String(message.getContent()));
-        final NearbyDevice device = message.zzbxo()[0];
-        if (device != null) {
-            mDeviceId.setVisibility(View.VISIBLE);
-            mDeviceId.setText(device.zzbxu());
-        } else {
-            mDeviceId.setVisibility(View.GONE);
-        }
     }
 }

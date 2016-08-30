@@ -1,46 +1,73 @@
 package com.example.inquallity.beacons.service;
 
-import android.app.IntentService;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.support.v4.app.NotificationCompat;
+import android.os.IBinder;
+import android.support.annotation.Nullable;
+import android.util.Log;
 
-import com.example.inquallity.beacons.R;
-import com.example.inquallity.beacons.activity.MainActivity;
-import com.google.android.gms.nearby.Nearby;
-import com.google.android.gms.nearby.messages.Message;
-import com.google.android.gms.nearby.messages.MessageListener;
+import com.estimote.sdk.BeaconManager;
+import com.estimote.sdk.eddystone.Eddystone;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Maksim Radko
  */
-public class BeaconsMessageService extends IntentService {
+public class BeaconsMessageService extends Service {
 
-    public BeaconsMessageService() {
-        super("BEACON_SERVICE");
+    private static final String TAG = BeaconsMessageService.class.getSimpleName();
+
+    private BeaconManager mBeaconManager;
+
+    private List<Eddystone> mUuids = Collections.emptyList();
+
+    public static Intent makeIntent(Context ctx) {
+        return new Intent(ctx, BeaconsMessageService.class);
+    }
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
     }
 
     @Override
-    protected void onHandleIntent(Intent intent) {
-        final Context context = getApplicationContext();
-        Nearby.Messages.handleIntent(intent, new MessageListener() {
+    public void onCreate() {
+        super.onCreate();
+        mBeaconManager = new BeaconManager(this);
+        mBeaconManager.setForegroundScanPeriod(2_000L, 30_000L);
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        mBeaconManager.connect(new BeaconManager.ServiceReadyCallback() {
             @Override
-            public void onFound(Message message) {
-                final Notification nf = new NotificationCompat.Builder(context)
-                        .setContentTitle(message.getType())
-                        .setContentText(new String(message.getContent()))
-                        .setSmallIcon(R.drawable.ic_notification_white)
-                        .setContentIntent(PendingIntent.getActivities(context, 0,
-                                new Intent[]{MainActivity.makeIntent(context)}, PendingIntent.FLAG_ONE_SHOT))
-                        .setAutoCancel(true)
-                        .build();
-                final NotificationManager ns = (NotificationManager) context.getApplicationContext()
-                        .getSystemService(Context.NOTIFICATION_SERVICE);
-                ns.notify(1, nf);
+            public void onServiceReady() {
+                startMonitoring();
             }
         });
+        return START_STICKY;
     }
+
+    private void startMonitoring() {
+        mBeaconManager.setEddystoneListener(new BeaconManager.EddystoneListener() {
+            @Override
+            public void onEddystonesFound(List<Eddystone> list) {
+                if (list == null || list.isEmpty()) {
+                    Log.d(TAG, "onEddystonesFound: NOT_FOUND");
+                }
+                for (Eddystone eddystone : list) {
+                    if (!mUuids.contains(eddystone)) {
+                        Log.d(TAG, "onEddystone Found: do request");
+                    }
+                }
+                mUuids = Collections.unmodifiableList(list);
+            }
+        });
+        mBeaconManager.startEddystoneScanning();
+    }
+
 }

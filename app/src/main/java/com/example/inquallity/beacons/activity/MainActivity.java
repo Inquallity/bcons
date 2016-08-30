@@ -1,14 +1,17 @@
 package com.example.inquallity.beacons.activity;
 
+import android.Manifest;
 import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -43,6 +46,8 @@ public class MainActivity extends AppCompatActivity implements MainView, ResultC
     private static final String TAG = MainActivity.class.getName();
 
     private static final int RC_ENABLE_BT = 1;
+
+    private static final int RC_COARSE = 2;
 
     private MainPresenter mPresenter;
 
@@ -106,6 +111,14 @@ public class MainActivity extends AppCompatActivity implements MainView, ResultC
         }
         Snackbar.make(mLineIndicator, textRes, Snackbar.LENGTH_INDEFINITE).show();
         refreshBluetoothState();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (grantResults.length > 0) {
+            subscribe();
+        }
     }
 
     @Override
@@ -180,8 +193,13 @@ public class MainActivity extends AppCompatActivity implements MainView, ResultC
     }
 
     private void subscribe() {
-        if (mApiClient.isConnected()) {
-            Nearby.Messages.subscribe(mApiClient, mPresenter, SUBSCRIBE_OPTIONS).setResultCallback(this);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            startService(BeaconsMessageService.makeIntent(getApplicationContext()));
+//            if (mApiClient.isConnected()) {
+//                Nearby.Messages.subscribe(mApiClient, mPresenter, SUBSCRIBE_OPTIONS).setResultCallback(this);
+//            }
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, RC_COARSE);
         }
     }
 
